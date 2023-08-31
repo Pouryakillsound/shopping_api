@@ -1,5 +1,13 @@
+from uuid import uuid4
+from django.core.validators import MinValueValidator
 from django.db import models
 from account.models import User
+from .validators import image_maximum_file_size
+
+
+class Promition(models.Model):
+    title = models.CharField(max_length=100)
+    description = models.TextField()
 
 class Collection(models.Model):
     title = models.CharField(max_length=100)
@@ -10,14 +18,19 @@ class Collection(models.Model):
 
 class Product(models.Model):
     title = models.CharField(max_length=100)
+    slug = models.SlugField()
     description = models.TextField()
     inventory = models.PositiveSmallIntegerField()
     unit_price = models.DecimalField(max_digits=6, decimal_places=2)
     collection = models.ForeignKey(Collection, on_delete=models.PROTECT, related_name='products')
+    prromition = models.ManyToManyField(Promition, blank=True)
 
     def __str__(self) -> str:
         return self.title
 
+class ProductImage(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='store/images', validators=[image_maximum_file_size])
 
 class Order(models.Model):
     PAYMENT_STATUS_PENDING = 'P'
@@ -34,6 +47,21 @@ class Order(models.Model):
 
 
 class OrderItem(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.PROTECT, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name='orderitems')
     quantity = models.PositiveSmallIntegerField()
     unit_price = models.DecimalField(max_digits=6, decimal_places=2)
+
+
+class Cart(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid4)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class CartItem(models.Model):
+    cart = models.ForeignKey(
+        Cart, on_delete=models.CASCADE, related_name='items')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1)]
+    )
