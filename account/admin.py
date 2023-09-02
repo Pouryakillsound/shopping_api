@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User, UserProfile
+from .models import User, UserProfile, Address
 from django.contrib.auth.admin import UserAdmin
 
 
@@ -20,3 +20,8 @@ class UserAdmin(UserAdmin):
 class UserProfileAdmin(admin.ModelAdmin):
     model = UserProfile
     fields = ['user', 'age', 'national_code']
+
+@admin.register(Address)
+class AddressAdmin(admin.ModelAdmin):
+    list_display = ['customer', 'city']
+    search_fields = ['customer']

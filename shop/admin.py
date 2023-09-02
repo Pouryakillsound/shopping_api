@@ -20,6 +20,7 @@ class LowProductInventoryFilter(admin.SimpleListFilter):
         
 class ProductInline(admin.TabularInline):
     model=Product
+    prepopulated_fields = {'slug':['title']}
     fields = ['title', 'description', 'inventory', 'unit_price', 'collection']
     extra = 1
     formfield_overrides = {
@@ -36,15 +37,15 @@ class CollectionAdmin(admin.ModelAdmin):
 
 
 @admin.register(Product)
-class ProductAdmib(admin.ModelAdmin):
-    model = Product
-    fields = ['title', 'description', 'inventory', 'unit_price', 'collection']
+class ProductAdmin(admin.ModelAdmin):
+    prepopulated_fields = {'slug':['title']}
+    fields = ['title', 'description', 'slug', 'inventory', 'unit_price', 'collection']
     list_display = ['title', 'low_inventory', 'unit_price']
     list_editable = ['unit_price']
     search_fields = ['title']
     list_filter = [LowProductInventoryFilter]
 
-    @admin.display(ordering='inventory')
+    @admin.display(description='inventory', ordering='inventory')
     def low_inventory(self, product):
         if product.inventory <= 10:
             return 'LOW'
@@ -52,5 +53,37 @@ class ProductAdmib(admin.ModelAdmin):
 
 
 
-admin.site.register(Order)
-admin.site.register(OrderItem)
+class OrderItemInline(admin.TabularInline):
+    model = OrderItem
+    fields = ['order', 'product', 'quantity', 'unit_price']
+    extra = 0
+
+@admin.register(Order)
+class OrderAdmin(admin.ModelAdmin):
+    fields = ['user','payment_status']
+    list_display = ['user', 'payment_status', 'placed_at']
+    list_filter = ['payment_status']
+    search_fields = ['user']
+    inlines = [OrderItemInline]
+
+
+
+@admin.register(OrderItem)
+class OrderItem(admin.ModelAdmin):
+    fields = ['order', 'product', 'quantity', 'unit_price']
+    list_display = ['order', 'product', 'quantity']
+    search_fields = ['order__user__username']
+
+@admin.register(Cart)
+class CartAdmin(admin.ModelAdmin):
+    readonly_fields = ['id', 'created_at']
+    list_display = ['id', 'created_at']
+    search_fields = ['id']
+
+
+@admin.register(CartItem)
+class CartItem(admin.ModelAdmin):
+    fields = ['cart', 'product', 'quantity']
+    autocomplete_fields = ['cart', 'product']
+    list_display = ['cart', 'product', 'quantity']
+    search_fields = ['cart__id', 'product__title']

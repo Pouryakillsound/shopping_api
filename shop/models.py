@@ -23,7 +23,9 @@ class Product(models.Model):
     inventory = models.PositiveSmallIntegerField()
     unit_price = models.DecimalField(max_digits=6, decimal_places=2)
     collection = models.ForeignKey(Collection, on_delete=models.PROTECT, related_name='products')
-    prromition = models.ManyToManyField(Promition, blank=True)
+    promotion = models.ManyToManyField(Promition, blank=True)
+
+    
 
     def __str__(self) -> str:
         return self.title
@@ -37,13 +39,16 @@ class Order(models.Model):
     PAYMENT_STATUS_FAILED = 'F'
     PAYMENT_STATUS_COMPLETED = 'C'
     PAYMENT_STATUS_CHOICES = [
-        (PAYMENT_STATUS_PENDING, 'payment is pending'),
-        (PAYMENT_STATUS_FAILED, 'payment is failed'),
-        (PAYMENT_STATUS_COMPLETED, 'payment is completed')
+        (PAYMENT_STATUS_PENDING, 'Pending'),
+        (PAYMENT_STATUS_FAILED, 'Failed'),
+        (PAYMENT_STATUS_COMPLETED, 'Completed')
     ]
     user = models.ForeignKey(User, on_delete = models.CASCADE, related_name='orders')
     placed_at = models.DateTimeField(auto_now_add=True)
     payment_status = models.CharField(max_length=1, choices=PAYMENT_STATUS_CHOICES, default=PAYMENT_STATUS_PENDING)    
+
+    def __str__(self) -> str:
+        return f'{self.user}'
 
 
 class OrderItem(models.Model):
@@ -53,9 +58,16 @@ class OrderItem(models.Model):
     unit_price = models.DecimalField(max_digits=6, decimal_places=2)
 
 
+    def __str__(self) -> str:
+        return f'{self.order}'
+
+
 class Cart(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid4)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self) -> str:
+        return f'{self.id}'
 
 
 class CartItem(models.Model):
