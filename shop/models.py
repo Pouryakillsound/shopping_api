@@ -3,6 +3,8 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from account.models import User
 from .validators import image_maximum_file_size
+from rest_framework import reverse
+from rest_framework.response import Response
 
 
 class Promition(models.Model):
@@ -21,14 +23,15 @@ class Product(models.Model):
     slug = models.SlugField()
     description = models.TextField()
     inventory = models.PositiveSmallIntegerField()
-    unit_price = models.DecimalField(max_digits=6, decimal_places=2)
+    unit_price = models.DecimalField(max_digits=6, decimal_places=2, validators=[MinValueValidator(0)])
     collection = models.ForeignKey(Collection, on_delete=models.PROTECT, related_name='products')
     promotion = models.ManyToManyField(Promition, blank=True)
 
-    
-
     def __str__(self) -> str:
         return self.title
+    
+    def get_absolute_url(self):
+        return reverse.reverse('shop:products-detail', args=[str(self.id), str(self.slug)])
 
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
