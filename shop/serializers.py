@@ -1,13 +1,26 @@
 from rest_framework import serializers
-from .models import Product, Collection, Order
+from .models import Product, ProductImage, Collection, Order
 from django.utils.text import slugify
 from django.core.exceptions import ValidationError
 
-class ProductSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(read_only=True)
-    slug = serializers.SlugField(read_only=True)
-    images = serializers.ImageField(required=False)
+    
+class ProductImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductImage
+        fields = ['id', 'product', 'image']
 
+
+class ProductSerializer(serializers.ModelSerializer):
+
+    images = ProductImageSerializer(many=True)
+
+    class Meta:
+        model = Product
+        fields = ['id', 'title', 'slug', 'description', 'inventory',
+                  'unit_price', 'collection', 'promotion', 'images', 'seller']
+
+
+class ProductUpdateSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         instance.slug = slugify(validated_data.get('title', instance.title))
@@ -21,21 +34,43 @@ class ProductSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+    class Meta:
+        model = Product
+        fields = ['title', 'description', 'inventory',
+                  'unit_price', 'collection', 'promotion', 'images']
+
+class ProductAddSerializer(serializers.ModelSerializer):
+    def create(self, validated_data):
+        slug = slugify(validated_data['title'])
+        request = self.context['request']
+        promotions = validated_data['promotion']
+        images = validated_data['images']
+        del validated_data['images']
+        del validated_data['promotion']
+        seller = request.user
+        product = Product.objects.create(slug=slug, seller=seller, **validated_data)
+
+        product.images.set(images)
+        product.promotion.set(promotions)
+
+        return product
 
     class Meta:
         model = Product
-        fields = ['id', 'title', 'slug', 'description', 'inventory',
+        fields = ['title', 'description', 'inventory',
                   'unit_price', 'collection', 'promotion', 'images']
+        images = serializers.ImageField()
+
 
 class CollectionSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Collection
         fields = ['id', 'title', 'featured_product']
 
+
 class OrderSerializer(serializers.ModelSerializer):
     placed_at = serializers.DateTimeField(read_only=True)
-
-
 
     class Meta:
         model = Order

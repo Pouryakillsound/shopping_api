@@ -2,8 +2,9 @@ from typing import Any, List, Optional, Tuple
 from django.contrib import admin
 from django.db.models.query import QuerySet
 from django.forms import Textarea
-from .models import Product, Collection, Cart, CartItem, Order, OrderItem
+from .models import Product, Collection, Cart, CartItem, Order, OrderItem, ProductImage, Promotion
 from django.db import models
+from django.utils.html import format_html
 
 
 class LowProductInventoryFilter(admin.SimpleListFilter):
@@ -21,11 +22,21 @@ class LowProductInventoryFilter(admin.SimpleListFilter):
 class ProductInline(admin.TabularInline):
     model=Product
     prepopulated_fields = {'slug':['title']}
-    fields = ['title', 'description', 'inventory', 'unit_price', 'collection']
+    fields = ['title', 'description', 'inventory', 'unit_price', 'collection', 'seller']
     extra = 1
     formfield_overrides = {
         models.TextField:{'widget': Textarea(attrs={'rows':3, 'cols':40})}
     }
+
+class ProductImageInline(admin.TabularInline):
+    model = ProductImage
+    extra = 0
+    readonly_fields = ['thumbnail']
+
+    def thumbnail(self, instance):
+        if instance.image.name != '':
+            return format_html(f'<img src="{ instance.image.url }" class="thumbnail"/>')
+        return ''
 
 
 @admin.register(Collection)
@@ -39,11 +50,11 @@ class CollectionAdmin(admin.ModelAdmin):
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug':['title']}
-    fields = ['title', 'description', 'slug', 'inventory', 'unit_price', 'collection']
     list_display = ['title', 'low_inventory', 'unit_price']
     list_editable = ['unit_price']
     search_fields = ['title']
     list_filter = [LowProductInventoryFilter]
+    inlines = [ProductImageInline]
 
     @admin.display(description='inventory', ordering='inventory')
     def low_inventory(self, product):
@@ -51,6 +62,10 @@ class ProductAdmin(admin.ModelAdmin):
             return 'LOW'
         return product.inventory
 
+    class Media:
+        css = {
+            'all': ['shop/styles.css']
+        }
 
 
 class OrderItemInline(admin.TabularInline):
@@ -87,3 +102,7 @@ class CartItem(admin.ModelAdmin):
     autocomplete_fields = ['cart', 'product']
     list_display = ['cart', 'product', 'quantity']
     search_fields = ['cart__id', 'product__title']
+
+
+admin.site.register(Promotion)
+admin.site.register(ProductImage)
