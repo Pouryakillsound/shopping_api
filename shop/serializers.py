@@ -1,18 +1,33 @@
-from rest_framework import serializers
-from .models import Product, ProductImage, Collection, Order
-from django.utils.text import slugify
 from django.core.exceptions import ValidationError
+from django.utils.text import slugify
+from rest_framework import serializers
 
-    
-class ProductImageSerializer(serializers.ModelSerializer):
+from .models import Collection, Order, Product, ProductImage
+
+
+class ProductImageNestedToProductListSerializer(serializers.ModelSerializer):
+    def create(self, validated_data):
+        image = validated_data['image']
+        product_pk = self.context['product_pk']
+        product_image = ProductImage.objects.create(image=image, product_id=product_pk)
+        return product_image
     class Meta:
         model = ProductImage
-        fields = ['id', 'product', 'image']
+        fields = ['id', 'image']
+
+
+class ProductImageNestedToProductDetailSerializer(serializers.ModelSerializer):
+    def update(self, instance, validated_data):
+        instance.image = validated_data['image']
+        
+    class Meta:
+        model = ProductImage
+        fields = ['id', 'image']
 
 
 class ProductSerializer(serializers.ModelSerializer):
 
-    images = ProductImageSerializer(many=True)
+    images = ProductImageNestedToProductListSerializer(many=True)
 
     class Meta:
         model = Product
