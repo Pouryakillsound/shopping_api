@@ -1,4 +1,6 @@
-from django.shortcuts import get_object_or_404, redirect, render
+import pprint
+from django.shortcuts import get_object_or_404, redirect, render, get_list_or_404
+from django.db.models import F
 from django.utils.text import slugify
 from rest_framework import permissions, status
 from rest_framework.permissions import AllowAny
@@ -59,19 +61,17 @@ class ProductViewSet(MultipleLookupFields, ModelViewSet):
 
 
 class ProductImageNestedToProductListView(ListCreateAPIView):
-    queryset = ProductImage.objects.select_related('product').all()
-    serializer_class = ProductImageNestedToProductListSerializer
-    lookups = ['product_pk', 'product_slug'] #be careful about changing this, cause then you should change urls as well
 
-    def get_object(self):
-        queryset = self.get_queryset()
-        lookups = self.lookups
+    serializer_class = ProductImageNestedToProductListSerializer
+
+    lookups = ['product_pk'] #be careful about changing this, cause then you should change urls as well
+    def get_queryset(self):
+        queryset = ProductImage.objects.select_related('product')
         filters = {}
-        for field in lookups:
-            filters[field] = self.kwargs[field]
-        obj = queryset.filter(filters)
-        self.check_object_permissions(self.request, obj)
-        return obj
+        for field in self.lookups:
+            filters[field] = self.kwargs[field] 
+        queryset = queryset.filter(product_id=filters['product_pk'])
+        return queryset
 
     def get_serializer_context(self):
         return {'product_pk':self.kwargs['product_pk']}

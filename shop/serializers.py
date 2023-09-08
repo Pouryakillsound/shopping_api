@@ -11,6 +11,7 @@ class ProductImageNestedToProductListSerializer(serializers.ModelSerializer):
         product_pk = self.context['product_pk']
         product_image = ProductImage.objects.create(image=image, product_id=product_pk)
         return product_image
+
     class Meta:
         model = ProductImage
         fields = ['id', 'image']
