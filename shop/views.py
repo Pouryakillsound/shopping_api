@@ -1,19 +1,30 @@
 import pprint
-from django.shortcuts import get_object_or_404, redirect, render, get_list_or_404
+
 from django.db.models import F
+from django.shortcuts import (get_list_or_404, get_object_or_404, redirect,
+                              render)
 from django.utils.text import slugify
 from rest_framework import permissions, status
+from rest_framework.generics import (ListCreateAPIView,
+                                     RetrieveUpdateDestroyAPIView)
+from rest_framework.mixins import (CreateModelMixin, DestroyModelMixin,
+                                   RetrieveModelMixin, UpdateModelMixin)
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.reverse import reverse_lazy
-from rest_framework.viewsets import ModelViewSet, GenericViewSet
-from rest_framework.mixins import CreateModelMixin, UpdateModelMixin, DestroyModelMixin, RetrieveModelMixin
-from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView
-from .models import Collection, Product, ProductImage, Cart
-from .permissions import (CanCreateProductPermission, CanEditProductPermission,
-                          IsAdminOrReadOnly, CanAddImageToProduct)
-from .serializers import (CollectionSerializer, ProductAddSerializer,
-                          ProductSerializer, ProductUpdateSerializer, ProductImageNestedToProductListSerializer, ProductImageNestedToProductDetailSerializer)
+from rest_framework.viewsets import GenericViewSet, ModelViewSet
+
+from .models import Cart, Collection, Product, ProductImage
+from .permissions import (CanAddImageToProductPermission,
+                          CanCreateProductPermission,
+                          CanEditImageRelatedToAProductPermission,
+                          CanEditProductPermission, IsAdminOrReadOnly)
+from .serializers import (CartSerializer, CollectionSerializer,
+                          ProductAddSerializer,
+                          ProductImageNestedToProductDetailSerializer,
+                          ProductImageNestedToProductListSerializer,
+                          ProductSerializer, ProductUpdateSerializer)
+
 
 class MultipleLookupFields:
     def get_object(self):
@@ -29,8 +40,9 @@ class MultipleLookupFields:
 
 class ProductViewSet(MultipleLookupFields, ModelViewSet):
     http_method_names = ['header', 'options', 'get', 'patch', 'post', 'delete']
-    queryset = Product.objects.prefetch_related('images', 'promotion').select_related('collection').all()
-    lookup_fields = ('pk', 'slug') #this field is optionally added by MultipleLookupFields class on the top, be careful about changing this, cause then you should change urls as well
+    queryset = Product.objects.prefetch_related('images', 'promotion').select_related('collection', 'seller').all()
+    lookup_fields = ('pk', 'slug') #this field is optionally added by MultipleLookupFields class on the top,/
+    #  be careful about changing this, cause then you should change urls as well
 
     def get_serializer_context(self):
         return {'request':self.request}
@@ -63,8 +75,8 @@ class ProductViewSet(MultipleLookupFields, ModelViewSet):
 class ProductImageNestedToProductListView(ListCreateAPIView):
 
     serializer_class = ProductImageNestedToProductListSerializer
-
     lookups = ['product_pk'] #be careful about changing this, cause then you should change urls as well
+
     def get_queryset(self):
         queryset = ProductImage.objects.select_related('product')
         filters = {}
@@ -78,14 +90,15 @@ class ProductImageNestedToProductListView(ListCreateAPIView):
 
     def get_permissions(self):
         if self.request.method == 'POST':
-            return [CanAddImageToProduct()]
+            return [CanAddImageToProductPermission()]
         return [AllowAny()]
 
 
 class ProductImageNestedToProductDetailView(RetrieveUpdateDestroyAPIView):
+    http_method_names = ['get', 'patch', 'delete', 'options', 'header']
     queryset = ProductImage.objects.select_related('product').all()
     serializer_class = ProductImageNestedToProductDetailSerializer
-
+    
     def get_object(self):
         product_id = self.kwargs['product_pk']
         product_slug = self.kwargs['product_slug']
@@ -94,6 +107,10 @@ class ProductImageNestedToProductDetailView(RetrieveUpdateDestroyAPIView):
         self.check_object_permissions(self.request, obj)
         return obj
 
+    def get_permissions(self):
+        if self.request.method == 'PATCH':
+            return [CanEditImageRelatedToAProductPermission()]
+        return [AllowAny()]
 
 class CollectionViewSet(ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
@@ -102,3 +119,16 @@ class CollectionViewSet(ModelViewSet):
     serializer_class = CollectionSerializer
     lookup_field = 'title'
 
+class CartViewSet(ModelViewSet):
+    queryset = Cart.objects.all()
+    serializer_class = CartSerializer
+
+    def create(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        seralizer = self.get_serializer(data=request.data)
+        seralizer.is_valid()
+        seralizer.save()
+        return Response({'id': seralizer.data['id']}, status=status.HTTP_201_CREATED)
+
+    
+    

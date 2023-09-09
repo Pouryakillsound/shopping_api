@@ -10,9 +10,12 @@ class UserProfileInline(admin.TabularInline):
     
 @admin.register(User)
 class UserAdmin(UserAdmin):
+    add_fieldsets = ((None, {
+            'classes': ('wide',),
+            'fields': ('username', 'password1', 'password2', 'email', 'first_name', 'last_name'),
+        },),)
     list_display = ['username', 'email', 'is_staff']
     inlines = [UserProfileInline]
-
     search_fields = ['id', 'username']
 
 

@@ -2,7 +2,7 @@ from django.core.exceptions import ValidationError
 from django.utils.text import slugify
 from rest_framework import serializers
 
-from .models import Collection, Order, Product, ProductImage
+from .models import Cart, Collection, Order, Product, ProductImage
 
 
 class ProductImageNestedToProductListSerializer(serializers.ModelSerializer):
@@ -20,6 +20,8 @@ class ProductImageNestedToProductListSerializer(serializers.ModelSerializer):
 class ProductImageNestedToProductDetailSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         instance.image = validated_data['image']
+        instance.save()
+        return instance
         
     class Meta:
         model = ProductImage
@@ -59,22 +61,15 @@ class ProductAddSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         slug = slugify(validated_data['title'])
         request = self.context['request']
-        promotions = validated_data['promotion']
-        images = validated_data['images']
-        del validated_data['images']
-        del validated_data['promotion']
         seller = request.user
         product = Product.objects.create(slug=slug, seller=seller, **validated_data)
-
-        product.images.set(images)
-        product.promotion.set(promotions)
 
         return product
 
     class Meta:
         model = Product
         fields = ['title', 'description', 'inventory',
-                  'unit_price', 'collection', 'promotion', 'images']
+                  'unit_price', 'collection']
         images = serializers.ImageField()
 
 
@@ -91,3 +86,10 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ['user', 'payment_status', 'placed_at']
+
+class CartSerializer(serializers.ModelSerializer):
+    id = serializers.CharField(read_only=True)
+    items = serializers.RelatedField(many=True, read_only=True)
+    class Meta:
+        model = Cart
+        fields = ['id', 'items', 'created_at']

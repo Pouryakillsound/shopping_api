@@ -1,4 +1,4 @@
-from .views import ProductViewSet, CollectionViewSet, ProductImageNestedToProductListView, ProductImageNestedToProductDetailView
+from .views import ProductViewSet, CollectionViewSet, ProductImageNestedToProductListView, ProductImageNestedToProductDetailView,CartViewSet
 from pprint import pprint
 from django.urls import path
 from rest_framework_nested.routers import DefaultRouter, NestedDefaultRouter
@@ -8,6 +8,7 @@ app_name = 'shop'
 router = DefaultRouter()
 product = router.register('products', ProductViewSet, basename='products')
 router.register('collections', CollectionViewSet, basename='collections')
+router.register('carts', CartViewSet)
 
 
 
