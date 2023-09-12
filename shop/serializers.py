@@ -1,8 +1,9 @@
+import decimal
 from django.core.exceptions import ValidationError
 from django.utils.text import slugify
 from rest_framework import serializers
 
-from .models import Cart, Collection, Order, Product, ProductImage
+from .models import Cart, CartItem, Collection, Order, Product, ProductImage
 
 
 class ProductImageNestedToProductListSerializer(serializers.ModelSerializer):
@@ -65,11 +66,11 @@ class ProductAddSerializer(serializers.ModelSerializer):
         product = Product.objects.create(slug=slug, seller=seller, **validated_data)
 
         return product
-
+    collection_id = serializers.IntegerField()
     class Meta:
         model = Product
         fields = ['title', 'description', 'inventory',
-                  'unit_price', 'collection']
+                  'unit_price', 'collection_id']
         images = serializers.ImageField()
 
 
@@ -80,16 +81,62 @@ class CollectionSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'featured_product']
 
 
-class OrderSerializer(serializers.ModelSerializer):
-    placed_at = serializers.DateTimeField(read_only=True)
+class CartItemSerializer(serializers.ModelSerializer):
+    total_price_product = serializers.SerializerMethodField(method_name='total_item_price')
+    product = ProductSerializer()
+    cart_id = serializers.CharField(read_only=True)
+    class Meta:
+        model = CartItem
+        fields = ['id', 'cart_id', 'product', 'quantity', 'total_price_product']
+
+    def total_item_price(self, cart_item):
+        return cart_item.quantity * cart_item.product.unit_price
+
+
+
+class CreateCartItemSerializer(serializers.ModelSerializer):
+    product_id = serializers.IntegerField()
+
+    def validate_product_id(self, product_id):
+        if not Product.objects.filter(pk=product_id):
+            raise ValidationError('Product id is not correct')
+        return product_id
+
+    def save(self, **kwargs):
+        cart_id = self.context['cart_id']
+        quantity = self.validated_data['quantity']
+        product_id = self.validated_data['product_id']
+
+        try:
+            cartitem = CartItem.objects.get(cart_id=cart_id, product_id=product_id)
+            cartitem.quantity += quantity
+            cartitem.save()
+            self.instance = cartitem
+            return self.instance
+
+        except CartItem.DoesNotExist:
+            self.instance = CartItem.objects.create(product_id=product_id,
+                                                cart_id=cart_id,
+                                                  quantity=quantity)
+            return self.instance
 
     class Meta:
-        model = Order
-        fields = ['user', 'payment_status', 'placed_at']
+        model = CartItem
+        fields = ['id', 'product_id', 'quantity']
+
+
 
 class CartSerializer(serializers.ModelSerializer):
     id = serializers.CharField(read_only=True)
-    items = serializers.RelatedField(many=True, read_only=True)
+    items = CartItemSerializer(many=True, read_only=True)
+    cart_price = serializers.SerializerMethodField(method_name='total_cart_price')
+
     class Meta:
         model = Cart
-        fields = ['id', 'items', 'created_at']
+        fields = ['id', 'items', 'created_at', 'cart_price']
+
+    def total_cart_price(self, cart):
+        price = 0
+        for item in cart.items.all():
+            price += item.quantity * item.product.unit_price
+        return price

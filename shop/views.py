@@ -14,7 +14,7 @@ from rest_framework.response import Response
 from rest_framework.reverse import reverse_lazy
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
-from .models import Cart, Collection, Product, ProductImage
+from .models import Cart, CartItem, Collection, Product, ProductImage
 from .permissions import (CanAddImageToProductPermission,
                           CanCreateProductPermission,
                           CanEditImageRelatedToAProductPermission,
@@ -23,7 +23,8 @@ from .serializers import (CartSerializer, CollectionSerializer,
                           ProductAddSerializer,
                           ProductImageNestedToProductDetailSerializer,
                           ProductImageNestedToProductListSerializer,
-                          ProductSerializer, ProductUpdateSerializer)
+                          ProductSerializer, ProductUpdateSerializer,
+                          CartItemSerializer, CreateCartItemSerializer)
 
 
 class MultipleLookupFields:
@@ -119,16 +120,34 @@ class CollectionViewSet(ModelViewSet):
     serializer_class = CollectionSerializer
     lookup_field = 'title'
 
-class CartViewSet(ModelViewSet):
-    queryset = Cart.objects.all()
+class CartViewSet(CreateModelMixin, RetrieveModelMixin, DestroyModelMixin, GenericViewSet):
+    http_method_names = ['get', 'patch', 'post', 'header', 'options']
+    queryset = Cart.objects.prefetch_related('items__product__images').all()
     serializer_class = CartSerializer
 
     def create(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         seralizer = self.get_serializer(data=request.data)
-        seralizer.is_valid()
+        seralizer.is_valid(raise_exception=True)
         seralizer.save()
         return Response({'id': seralizer.data['id']}, status=status.HTTP_201_CREATED)
 
-    
-    
+class CartItemViewSet(ModelViewSet):
+    queryset = CartItem.objects.select_related('cart', 'product')
+    http_method_names = ['header', 'options', 'get', 'post', 'patch', 'delete']
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        cartitem = serializer.save()
+        serializer = CartItemSerializer(cartitem)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def get_serializer_class(self):
+        if self.request.method in ['POST', 'PATCH']:
+            return CreateCartItemSerializer
+        elif self.request.method == 'GET':
+            return CartItemSerializer
+
+    def get_serializer_context(self):
+        return {'cart_id': self.kwargs['cart_pk']}

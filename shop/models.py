@@ -83,3 +83,5 @@ class CartItem(models.Model):
     quantity = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1)]
     )
+    class Meta:
+        unique_together = [['cart', 'product']]
