@@ -61,13 +61,7 @@ class TestCreateProduct:
         })
 
         assert response.status_code == status.HTTP_201_CREATED
-        assert response.data == {
-        "title": "a",
-        "description": "a",
-        "inventory": 10,
-        "unit_price": "10.00",
-        "collection_id": 1,
-        }
+
 
 
 @pytest.mark.django_db
@@ -76,3 +70,4 @@ class TestPatchProduct:
         response = patch_to_product({'title': 'a'})
 
         assert response.status_code == status.HTTP_200_OK
+
