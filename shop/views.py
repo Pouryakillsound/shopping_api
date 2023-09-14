@@ -118,7 +118,7 @@ class CollectionViewSet(ModelViewSet):
     http_method_names = ['header', 'options', 'get', 'patch', 'post', 'delete']
     queryset = Collection.objects.all()
     serializer_class = CollectionSerializer
-    lookup_field = 'title'
+
 
 class CartViewSet(CreateModelMixin, RetrieveModelMixin, DestroyModelMixin, GenericViewSet):
     http_method_names = ['get', 'patch', 'post', 'header', 'options']
