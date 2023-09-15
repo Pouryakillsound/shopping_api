@@ -126,16 +126,13 @@ class CartViewSet(CreateModelMixin, RetrieveModelMixin, DestroyModelMixin, Gener
     serializer_class = CartSerializer
 
     def create(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
         seralizer = self.get_serializer(data=request.data)
         seralizer.is_valid(raise_exception=True)
         seralizer.save()
         return Response({'id': seralizer.data['id']}, status=status.HTTP_201_CREATED)
 
 class CartItemViewSet(ModelViewSet):
-    queryset = CartItem.objects.select_related('cart', 'product')
     http_method_names = ['header', 'options', 'get', 'post', 'patch', 'delete']
-
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -143,6 +140,10 @@ class CartItemViewSet(ModelViewSet):
         serializer = CartItemSerializer(cartitem)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    def get_queryset(self):
+        return CartItem.objects.select_related('cart', 'product').\
+            filter(cart_id=self.kwargs['cart_pk'])
+    
     def get_serializer_class(self):
         if self.request.method in ['POST', 'PATCH']:
             return CreateCartItemSerializer

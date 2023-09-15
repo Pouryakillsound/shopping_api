@@ -9,8 +9,8 @@ router = DefaultRouter()
 product = router.register('products', ProductViewSet, basename='products')
 router.register('collections', CollectionViewSet, basename='collections')
 router.register('carts', CartViewSet)
-cartitem_roter = NestedDefaultRouter(router, 'carts', lookup='cart')
-cartitem_roter.register('items', CartItemViewSet)
+cartitem_router = NestedDefaultRouter(router, 'carts', lookup='cart')
+cartitem_router.register('items', CartItemViewSet, basename='cartitems')
 
 
 
@@ -24,4 +24,4 @@ urlpatterns = [
           ProductImageNestedToProductDetailView.as_view(), name='product-images-list')
     ]
 
-urlpatterns += router.urls + cartitem_roter.urls
+urlpatterns += router.urls + cartitem_router.urls
