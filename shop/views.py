@@ -24,7 +24,7 @@ from .serializers import (CartSerializer, CollectionSerializer,
                           ProductImageNestedToProductDetailSerializer,
                           ProductImageNestedToProductListSerializer,
                           ProductSerializer, ProductUpdateSerializer,
-                          CartItemSerializer, CreateCartItemSerializer)
+                          CartItemSerializer, CreateCartItemSerializer, UpdteCartItemSerializer)
 
 
 class MultipleLookupFields:
@@ -145,8 +145,10 @@ class CartItemViewSet(ModelViewSet):
             filter(cart_id=self.kwargs['cart_pk'])
     
     def get_serializer_class(self):
-        if self.request.method in ['POST', 'PATCH']:
+        if self.request.method == 'POST':
             return CreateCartItemSerializer
+        elif self.request.method == 'PATCH':
+            return UpdteCartItemSerializer
         elif self.request.method == 'GET':
             return CartItemSerializer
 
