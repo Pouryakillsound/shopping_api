@@ -1,12 +1,17 @@
-from .views import ProductViewSet, CollectionViewSet, ProductImageNestedToProductListView, ProductImageNestedToProductDetailView, CartViewSet, CartItemViewSet
 from pprint import pprint
+
 from django.urls import path
 from rest_framework_nested.routers import DefaultRouter, NestedDefaultRouter
+
+from .views import (CartItemViewSet, CartViewSet, CollectionViewSet,
+                    ProductImageNestedToProductDetailView,
+                    ProductImageNestedToProductListView, ProductViewSet, OrderViewSet)
 
 app_name = 'shop'
 
 router = DefaultRouter()
 product = router.register('products', ProductViewSet, basename='products')
+order = router.register('orders', OrderViewSet, basename='orders')
 router.register('collections', CollectionViewSet, basename='collections')
 router.register('carts', CartViewSet)
 cartitem_router = NestedDefaultRouter(router, 'carts', lookup='cart')

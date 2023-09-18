@@ -32,6 +32,11 @@ class TestGetCollection:
         respone = api_client.get(f'/collections/{collection.id}/')
 
         assert respone.status_code == status.HTTP_200_OK
+    
+    def test_if_object_does_not_exist_returns_404(self, api_client):
+        response = api_client.get('/collections/1/')
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 @pytest.mark.django_db

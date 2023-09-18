@@ -19,6 +19,12 @@ class TestGetCartItem:
 
         assert response.status_code == status.HTTP_200_OK
 
+    def test_if_object_does_not_exist_returns_404(self, api_client):
+        response = api_client.get('/carts/92122adb-4d94-4890-9d5d-c3f6880e266b/items/1/')
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
 @pytest.mark.django_db
 class TestPostCartItem:
     def test_post_returns_201(self, api_client):
@@ -46,3 +52,11 @@ class TestPatchCartItem:
         assert response.status_code == status.HTTP_200_OK
         assert response.data == {'product_id': product.id, 'quantity': 1}
 
+@pytest.mark.django_db
+class TestDeleteCartItem:
+    def test_delete_returns_204(self, api_client):
+        cart_item = baker.make(CartItem)
+
+        response = api_client.delete(f'/carts/{cart_item.cart.id}/items/{cart_item.id}/')
+
+        assert response.status_code == status.HTTP_204_NO_CONTENT

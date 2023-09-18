@@ -44,6 +44,11 @@ class TestGetProuct:
 
         assert response.status_code == status.HTTP_200_OK
 
+    def test_if_object_does_not_exist_returns_404(self, api_client):
+        response = api_client.get('/products/1/alimali/')
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
 
 @pytest.mark.django_db
 class TestCreateProduct:

@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from django.utils.text import slugify
 from rest_framework import serializers
 
-from .models import Cart, CartItem, Collection, Order, Product, ProductImage
+from .models import Cart, CartItem, Collection, Order, OrderItem, Product, ProductImage
 
 
 class ProductImageNestedToProductListSerializer(serializers.ModelSerializer):
@@ -144,3 +144,19 @@ class CartSerializer(serializers.ModelSerializer):
         for item in cart.items.all():
             price += item.quantity * item.product.unit_price
         return price
+class OrderItemSerailizer(serializers.ModelSerializer):
+    order_id = serializers.IntegerField()
+    product_id = serializers.IntegerField()
+
+    class Meta:
+        model = OrderItem
+        fields = ['id', 'order_id', 'product_id', 'quantity', 'unit_price']
+
+class OrderSerailizer(serializers.ModelSerializer):
+    placed_at = serializers.DateTimeField(read_only=True)
+    payment_status = serializers.CharField(read_only=True)
+    items = OrderItemSerailizer(many=True)
+    user_id = serializers.IntegerField()
+    class Meta:
+        model = Order
+        fields = ['id', 'items', 'placed_at', 'payment_status', 'user_id']

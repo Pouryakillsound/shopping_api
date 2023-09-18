@@ -14,7 +14,7 @@ from rest_framework.response import Response
 from rest_framework.reverse import reverse_lazy
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
-from .models import Cart, CartItem, Collection, Product, ProductImage
+from .models import Cart, CartItem, Collection, Order, OrderItem, Product, ProductImage
 from .permissions import (CanAddImageToProductPermission,
                           CanCreateProductPermission,
                           CanEditImageRelatedToAProductPermission,
@@ -24,7 +24,8 @@ from .serializers import (CartSerializer, CollectionSerializer,
                           ProductImageNestedToProductDetailSerializer,
                           ProductImageNestedToProductListSerializer,
                           ProductSerializer, ProductUpdateSerializer,
-                          CartItemSerializer, CreateCartItemSerializer, UpdteCartItemSerializer)
+                          CartItemSerializer, CreateCartItemSerializer, UpdteCartItemSerializer,
+                          OrderSerailizer, OrderItemSerailizer)
 
 
 class MultipleLookupFields:
@@ -121,7 +122,7 @@ class CollectionViewSet(ModelViewSet):
 
 
 class CartViewSet(CreateModelMixin, RetrieveModelMixin, DestroyModelMixin, GenericViewSet):
-    http_method_names = ['get', 'patch', 'post', 'header', 'options']
+    http_method_names = ['get', 'patch', 'post', 'delete', 'header', 'options']
     queryset = Cart.objects.prefetch_related('items__product__images').all()
     serializer_class = CartSerializer
 
@@ -143,7 +144,7 @@ class CartItemViewSet(ModelViewSet):
     def get_queryset(self):
         return CartItem.objects.select_related('cart', 'product').\
             filter(cart_id=self.kwargs['cart_pk'])
-    
+
     def get_serializer_class(self):
         if self.request.method == 'POST':
             return CreateCartItemSerializer
@@ -154,3 +155,7 @@ class CartItemViewSet(ModelViewSet):
 
     def get_serializer_context(self):
         return {'cart_id': self.kwargs['cart_pk']}
+
+class OrderViewSet(ModelViewSet):
+    queryset = Order.objects.select_related('user').prefetch_related('items')
+    serializer_class = OrderSerailizer
