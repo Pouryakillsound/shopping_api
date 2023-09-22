@@ -15,8 +15,7 @@ order = router.register('orders', OrderViewSet, basename='orders')
 router.register('collections', CollectionViewSet, basename='collections')
 router.register('carts', CartViewSet)
 cartitem_router = NestedDefaultRouter(router, 'carts', lookup='cart')
-cartitem_router.register('items', CartItemViewSet, basename='cartitems')
-
+cartitem_router.register('items', CartItemViewSet, basename='cart-items')
 
 
 urlpatterns = [

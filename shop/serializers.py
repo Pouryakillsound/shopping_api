@@ -144,6 +144,7 @@ class CartSerializer(serializers.ModelSerializer):
         for item in cart.items.all():
             price += item.quantity * item.product.unit_price
         return price
+
 class OrderItemSerailizer(serializers.ModelSerializer):
     order_id = serializers.IntegerField()
     product_id = serializers.IntegerField()
@@ -160,3 +161,42 @@ class OrderSerailizer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ['id', 'items', 'placed_at', 'payment_status', 'user_id']
+
+class UpdateOrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = ['items', 'payment_status']
+
+class CreateOrderSerializer(serializers.Serializer):
+    cart_id = serializers.UUIDField()
+    def validate_cart_id(self, cart_id):
+        cart = Cart.objects.filter(id=cart_id).exists()
+        if not cart:
+            raise ValidationError('cart_id is not valid')
+        return cart_id
+    
+    def save(self, **kwargs):
+        cart_id = self.validated_data['cart_id']
+        cart = Cart.objects.get(id=cart_id)
+
+        self.instance = order = Order.objects.create(
+            user_id=self.context.get('user_id'),
+        )
+
+        orderitem = [OrderItem(
+            order=order, product=cart_item.product, quantity=cart_item.quantity,
+            unit_price=cart_item.product.unit_price) for cart_item in cart.items.all()
+            ]
+        cart.delete()
+        OrderItem.objects.bulk_create(orderitem)
+    
+        return self.instance
+
+
+class OrderItemSerializer(serializers.ModelSerializer):
+    order = OrderSerailizer()
+    product = ProductSerializer()
+    class Meta:
+        model = CartItem
+        fields = ['order', 'product', 'quantity', 'unit_price']
+        

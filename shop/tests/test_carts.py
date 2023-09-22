@@ -22,6 +22,7 @@ class TestPostCart:
         response = api_client.post('/carts/', {})
 
         assert response.status_code == status.HTTP_201_CREATED
+
 @pytest.mark.django_db
 class TestDeleteCart:
     def test_delete_returns_204(self, api_client):
