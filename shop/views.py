@@ -13,7 +13,7 @@ from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.reverse import reverse_lazy
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
-
+from django.core.exceptions import ValidationError
 from .models import Cart, CartItem, Collection, Order, OrderItem, Product, ProductImage
 from .permissions import (CanAddImageToProductPermission,
                           CanCreateProductPermission,
@@ -27,24 +27,27 @@ from .serializers import (CartSerializer, CollectionSerializer,
                           CartItemSerializer, CreateCartItemSerializer, UpdteCartItemSerializer,
                           OrderSerailizer, OrderItemSerailizer, CreateOrderSerializer, UpdateOrderSerializer)
 
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
 
-class MultipleLookupFields:
+
+
+class ProductViewSet(ModelViewSet):
+    http_method_names = ['header', 'options', 'get', 'patch', 'post', 'delete']
+    queryset = Product.objects.prefetch_related('images', 'promotion').select_related('collection', 'seller').all()
+    lookup_fields = ('pk', 'slug')
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title']
+    
     def get_object(self):
         queryset = self.get_queryset()
         loopups = self.lookup_fields
         filters = {}
-        for filter in loopups:
-            filters[filter] = self.kwargs[filter]
+        for filter in loopups:           
+            filters[filter] = self.kwargs.get(filter)
         obj = get_object_or_404(queryset, **filters)
         self.check_object_permissions(self.request, obj)
         return obj
-
-
-class ProductViewSet(MultipleLookupFields, ModelViewSet):
-    http_method_names = ['header', 'options', 'get', 'patch', 'post', 'delete']
-    queryset = Product.objects.prefetch_related('images', 'promotion').select_related('collection', 'seller').all()
-    lookup_fields = ('pk', 'slug') #this field is optionally added by MultipleLookupFields class on the top,/
-    #  be careful about changing this, cause then you should change urls as well
 
     def get_serializer_context(self):
         return {'request':self.request}
@@ -158,13 +161,13 @@ class CartItemViewSet(ModelViewSet):
         return {'cart_id': self.kwargs['cart_pk']}
 
 class OrderViewSet(ModelViewSet):
-    http_method_names = ['header', 'options', 'post', 'get', 'patch', 'delete']
+    http_method_names = ['head', 'options', 'post', 'get', 'patch', 'delete']
     serializer_class = OrderSerailizer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Order.objects.select_related('user').prefetch_related('items').filter(user=self.request.user)
-
+        user = self.request.user
+        return Order.objects.select_related('user').prefetch_related('items').filter(user=user)
 
     def create(self, request, *args, **kwargs):
         serializer = CreateOrderSerializer(data=request.data, context={'user_id': self.request.user.id})

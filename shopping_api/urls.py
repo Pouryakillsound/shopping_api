@@ -22,8 +22,9 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('shop.urls', namespace='shop')),
     path("__debug__/", include("debug_toolbar.urls")),
+    path('', include('shop.urls', namespace='shop')),
+    path('account/', include('account.urls', namespace='account'))
 ]
 
 if settings.DEBUG:

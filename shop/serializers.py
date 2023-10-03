@@ -2,9 +2,9 @@ import decimal
 from django.core.exceptions import ValidationError
 from django.utils.text import slugify
 from rest_framework import serializers
-
+from django.db import transaction
 from .models import Cart, CartItem, Collection, Order, OrderItem, Product, ProductImage
-
+from django.db.models import F
 
 class ProductImageNestedToProductListSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
@@ -165,7 +165,7 @@ class OrderSerailizer(serializers.ModelSerializer):
 class UpdateOrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
-        fields = ['items', 'payment_status']
+        fields = ['payment_status']
 
 class CreateOrderSerializer(serializers.Serializer):
     cart_id = serializers.UUIDField()
@@ -176,21 +176,30 @@ class CreateOrderSerializer(serializers.Serializer):
         return cart_id
     
     def save(self, **kwargs):
-        cart_id = self.validated_data['cart_id']
-        cart = Cart.objects.get(id=cart_id)
+        with transaction.atomic():
+            cart_id = self.validated_data['cart_id']
+            cart = Cart.objects.prefetch_related('items').get(id=cart_id)
 
-        self.instance = order = Order.objects.create(
-            user_id=self.context.get('user_id'),
-        )
+            self.instance = order = Order.objects.create(
+                user_id=self.context.get('user_id'),
+            )
 
-        orderitem = [OrderItem(
-            order=order, product=cart_item.product, quantity=cart_item.quantity,
-            unit_price=cart_item.product.unit_price) for cart_item in cart.items.all()
-            ]
-        cart.delete()
-        OrderItem.objects.bulk_create(orderitem)
-    
-        return self.instance
+            orderitem = [OrderItem(
+                order=order, product=cart_item.product, quantity=cart_item.quantity,
+                unit_price=cart_item.product.unit_price) for cart_item in cart.items.all()
+                ]
+
+            products = []
+            for cart_item in cart.items.all():
+                product = cart_item.product
+                product.inventory = F('inventory') - cart_item.quantity
+                products.append(product)
+            Product.objects.bulk_update(products, ['inventory'])
+            
+
+            OrderItem.objects.bulk_create(orderitem)
+            cart.delete()
+            return self.instance
 
 
 class OrderItemSerializer(serializers.ModelSerializer):

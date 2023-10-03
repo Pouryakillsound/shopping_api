@@ -1,5 +1,4 @@
 from pprint import pprint
-
 from django.urls import path
 from rest_framework_nested.routers import DefaultRouter, NestedDefaultRouter
 
@@ -10,13 +9,12 @@ from .views import (CartItemViewSet, CartViewSet, CollectionViewSet,
 app_name = 'shop'
 
 router = DefaultRouter()
-product = router.register('products', ProductViewSet, basename='products')
 order = router.register('orders', OrderViewSet, basename='orders')
+router.register('products', ProductViewSet, basename='products')
 router.register('collections', CollectionViewSet, basename='collections')
 router.register('carts', CartViewSet)
 cartitem_router = NestedDefaultRouter(router, 'carts', lookup='cart')
 cartitem_router.register('items', CartItemViewSet, basename='cart-items')
-
 
 urlpatterns = [
     path('products/<int:pk>/<slug:slug>/',
@@ -29,3 +27,4 @@ urlpatterns = [
     ]
 
 urlpatterns += router.urls + cartitem_router.urls
+pprint(urlpatterns)
