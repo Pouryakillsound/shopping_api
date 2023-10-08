@@ -14,7 +14,7 @@ from rest_framework.response import Response
 from rest_framework.reverse import reverse_lazy
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from django.core.exceptions import ValidationError
-from .models import Cart, CartItem, Collection, Order, OrderItem, Product, ProductImage
+from .models import Cart, CartItem, Collection, Order, OrderItem, Product, ProductImage, Promotion
 from .permissions import (CanAddImageToProductPermission,
                           CanCreateProductPermission,
                           CanEditImageRelatedToAProductPermission,
@@ -25,7 +25,7 @@ from .serializers import (CartSerializer, CollectionSerializer,
                           ProductImageNestedToProductListSerializer,
                           ProductSerializer, ProductUpdateSerializer,
                           CartItemSerializer, CreateCartItemSerializer, UpdteCartItemSerializer,
-                          OrderSerailizer, OrderItemSerailizer, CreateOrderSerializer, UpdateOrderSerializer)
+                          OrderSerailizer, OrderItemSerailizer, CreateOrderSerializer, UpdateOrderSerializer, PromotionSerializer)
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
@@ -185,3 +185,7 @@ class OrderViewSet(ModelViewSet):
 
     def get_serializer_context(self):
         return {'user_id': self.request.user.id}
+
+class PromotionsViewSet(ModelViewSet):
+    queryset = Promotion.objects.all()
+    serializer_class = PromotionSerializer

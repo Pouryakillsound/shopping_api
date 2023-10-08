@@ -85,3 +85,8 @@ class CartItem(models.Model):
     )
     class Meta:
         unique_together = [['cart', 'product']]
+
+class Review(models.Model):
+    title = models.CharField(max_length=255)
+    body = models.CharField(max_length=800)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews')

@@ -4,7 +4,7 @@ from rest_framework_nested.routers import DefaultRouter, NestedDefaultRouter
 
 from .views import (CartItemViewSet, CartViewSet, CollectionViewSet,
                     ProductImageNestedToProductDetailView,
-                    ProductImageNestedToProductListView, ProductViewSet, OrderViewSet)
+                    ProductImageNestedToProductListView, ProductViewSet, OrderViewSet, PromotionsViewSet)
 
 app_name = 'shop'
 
@@ -13,6 +13,7 @@ order = router.register('orders', OrderViewSet, basename='orders')
 router.register('products', ProductViewSet, basename='products')
 router.register('collections', CollectionViewSet, basename='collections')
 router.register('carts', CartViewSet)
+router.register('promotions', PromotionsViewSet, basename='promotion')
 cartitem_router = NestedDefaultRouter(router, 'carts', lookup='cart')
 cartitem_router.register('items', CartItemViewSet, basename='cart-items')
 

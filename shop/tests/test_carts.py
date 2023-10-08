@@ -6,11 +6,12 @@ import pytest
 
 @pytest.mark.django_db
 class TestGetCart:
-    def test_retrieve_returns_200(self, api_client):
-        cart = baker.make(Cart)
-        response = api_client.get(f'/carts/{cart.id}/')
+    def test_listing_returns_405(self, api_client):
 
-        assert response.status_code == status.HTTP_200_OK
+        response = api_client.get()
+
+        assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+
     def test_if_object_does_not_exist_returns_404(self, api_client):
         response = api_client.get('/carts/92122adb-4d94-4890-9d5d-c3f6880e266b/')
 

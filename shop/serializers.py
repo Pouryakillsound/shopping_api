@@ -3,8 +3,14 @@ from django.core.exceptions import ValidationError
 from django.utils.text import slugify
 from rest_framework import serializers
 from django.db import transaction
-from .models import Cart, CartItem, Collection, Order, OrderItem, Product, ProductImage
+from .models import Cart, CartItem, Collection, Order, OrderItem, Product, ProductImage, Review, Promotion
 from django.db.models import F
+import ipware
+
+class ReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = ['title', 'body']
 
 class ProductImageNestedToProductListSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
@@ -30,13 +36,13 @@ class ProductImageNestedToProductDetailSerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
-
+    reviews = ReviewSerializer()
     images = ProductImageNestedToProductListSerializer(many=True)
 
     class Meta:
         model = Product
         fields = ['id', 'title', 'slug', 'description', 'inventory',
-                  'unit_price', 'collection', 'promotion', 'images', 'seller']
+                  'unit_price', 'collection', 'promotion', 'images', 'seller', 'reviews']
 
 
 class ProductUpdateSerializer(serializers.ModelSerializer):
@@ -208,4 +214,8 @@ class OrderItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = CartItem
         fields = ['order', 'product', 'quantity', 'unit_price']
-        
+
+class PromotionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Promotion
+        fields = ['title', 'description', 'product_set']

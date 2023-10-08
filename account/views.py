@@ -4,7 +4,8 @@ from .models import UserProfile, Address
 from .serializers import UserProfileSerilizer, AddressSerializer
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
-
+from rest_framework.generics import CreateAPIView
+from .models import User
 
 class UserProfileView(RetrieveModelMixin, UpdateModelMixin, GenericViewSet):
     serializer_class = UserProfileSerilizer
@@ -12,6 +13,7 @@ class UserProfileView(RetrieveModelMixin, UpdateModelMixin, GenericViewSet):
         obj = get_object_or_404(UserProfile, user_id=self.request.user.id)
         self.check_object_permissions(self.request, obj)
         return obj
+
 
 class AddressViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]

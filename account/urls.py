@@ -7,6 +7,6 @@ router = DefaultRouter()
 router.register('addresses', AddressViewSet, basename='address')
 
 urlpatterns = [
-    path('profile/', UserProfileView.as_view({'get':'retrieve', 'patch':'update'}), name='profile-detail')
+    path('profile/', UserProfileView.as_view({'get':'retrieve', 'patch':'update'}), name='profile-detail'),
 ]
 urlpatterns += router.urls
