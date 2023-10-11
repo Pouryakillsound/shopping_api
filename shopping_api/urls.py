@@ -18,16 +18,17 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from datetime import timedelta
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
+from django.views.static import serve
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("__debug__/", include("debug_toolbar.urls")),
     path('', include('shop.urls', namespace='shop')),
+    path('playground/', include('playground.urls', namespace='playground')),
     path('account/', include('account.urls', namespace='account')),
     path('auth/', include('djoser.urls')),
     path('auth/', include('djoser.urls.jwt')),

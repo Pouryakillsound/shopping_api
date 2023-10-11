@@ -5,7 +5,8 @@ from rest_framework import serializers
 from django.db import transaction
 from .models import Cart, CartItem, Collection, Order, OrderItem, Product, ProductImage, Review, Promotion
 from django.db.models import F
-import ipware
+from drf_writable_nested.serializers import WritableNestedModelSerializer
+
 
 class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
@@ -36,7 +37,7 @@ class ProductImageNestedToProductDetailSerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    reviews = ReviewSerializer()
+    reviews = ReviewSerializer(many=True)
     images = ProductImageNestedToProductListSerializer(many=True)
 
     class Meta:
@@ -159,7 +160,7 @@ class OrderItemSerailizer(serializers.ModelSerializer):
         model = OrderItem
         fields = ['id', 'order_id', 'product_id', 'quantity', 'unit_price']
 
-class OrderSerailizer(serializers.ModelSerializer):
+class OrderSerailizer(WritableNestedModelSerializer):
     placed_at = serializers.DateTimeField(read_only=True)
     payment_status = serializers.CharField(read_only=True)
     items = OrderItemSerailizer(many=True)

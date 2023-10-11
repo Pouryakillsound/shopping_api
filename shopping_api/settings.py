@@ -49,7 +49,8 @@ INSTALLED_APPS = [
     'djoser',
     'rest_framework_simplejwt',
     'shop',
-    'account'
+    'account',
+    'playground'
 ]
 
 MIDDLEWARE = [
@@ -68,7 +69,7 @@ ROOT_URLCONF = 'shopping_api.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR/'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
