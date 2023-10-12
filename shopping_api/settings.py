@@ -53,15 +53,7 @@ INSTALLED_APPS = [
     'playground',
 ]
 
-CMS_APPS = [
-    'djangocms_admin_style',
-    'django.contrib.sites',
-    'cms',
-    'menus',
-    'treebeard',
-]
 
-INSTALLED_APPS += CMS_APPS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -166,6 +158,3 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(days=5),
 }
 
-LANGUAGES = [
-    ('en', 'English'),
-]
