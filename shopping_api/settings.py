@@ -50,8 +50,18 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'shop',
     'account',
-    'playground'
+    'playground',
 ]
+
+CMS_APPS = [
+    'djangocms_admin_style',
+    'django.contrib.sites',
+    'cms',
+    'menus',
+    'treebeard',
+]
+
+INSTALLED_APPS += CMS_APPS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -155,3 +165,7 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
     "ACCESS_TOKEN_LIFETIME": timedelta(days=5),
 }
+
+LANGUAGES = [
+    ('en', 'English'),
+]

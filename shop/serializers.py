@@ -216,6 +216,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
         model = CartItem
         fields = ['order', 'product', 'quantity', 'unit_price']
 
+
 class PromotionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Promotion
