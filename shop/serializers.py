@@ -105,9 +105,29 @@ class CreateCartItemSerializer(serializers.ModelSerializer):
     product_id = serializers.IntegerField()
 
     def validate_product_id(self, product_id):
-        if not Product.objects.filter(pk=product_id):
+        if not Product.objects.filter(pk=product_id).exists():
             raise ValidationError('Product id is not correct')
         return product_id
+
+    def validate(self, attrs):
+        '''
+        this will check if the requested quantity for an item is avilable in inventory
+
+        '''
+        product_id = attrs['product_id']
+        product = Product.objects.prefetch_related('cartitem_set__cart').get(id=product_id)
+        cart_id = self.context['cart_id']
+        try:
+            cartitem = product.cartitem_set.get(cart_id=cart_id)
+            if cartitem.quantity + attrs['quantity'] > product.inventory:
+                raise ValidationError({'quantity': 'quantity is more than available'})
+        except CartItem.DoesNotExist:
+            if attrs['quantity'] > product.inventory:
+                raise ValidationError({'quantity': 'quantity is more than available'})
+            else:
+                pass
+        return attrs
+
 
     def save(self, **kwargs):
         cart_id = self.context['cart_id']

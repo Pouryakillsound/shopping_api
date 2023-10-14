@@ -1,3 +1,7 @@
 django
 djangorestframework
 drf-writable-nested
+pillow
+drf-nested-routers
+djoser
+django-filter

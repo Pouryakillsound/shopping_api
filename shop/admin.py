@@ -22,7 +22,7 @@ class LowProductInventoryFilter(admin.SimpleListFilter):
 class ProductInline(admin.TabularInline):
     model=Product
     prepopulated_fields = {'slug':['title']}
-    fields = ['title', 'description', 'inventory', 'unit_price', 'collection', 'seller']
+    fields = ['title', 'slug', 'description', 'inventory', 'unit_price', 'collection', 'seller']
     extra = 1
     formfield_overrides = {
         models.TextField:{'widget': Textarea(attrs={'rows':3, 'cols':40})}

@@ -8,7 +8,7 @@ import pytest
 class TestGetCart:
     def test_listing_returns_405(self, api_client):
 
-        response = api_client.get()
+        response = api_client.get('/carts/')
 
         assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
 
