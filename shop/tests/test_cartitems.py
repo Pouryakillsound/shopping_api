@@ -34,7 +34,7 @@ class TestPostCartItem:
 
         assert response.status_code == status.HTTP_201_CREATED
 
-    def test_creating_a_existing_cartitem_only_increases_the_existing_one(self, api_client):
+    def test_creating_a_existing_cartitem_only_increases_the_quantity_of_existing_one(self, api_client):
         cart_item = baker.make(CartItem)
         existing_quantity = cart_item.quantity
         quantity = 1

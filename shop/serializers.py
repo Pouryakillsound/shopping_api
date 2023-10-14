@@ -104,28 +104,40 @@ class CartItemSerializer(serializers.ModelSerializer):
 class CreateCartItemSerializer(serializers.ModelSerializer):
     product_id = serializers.IntegerField()
 
-    def validate_product_id(self, product_id):
-        if not Product.objects.filter(pk=product_id).exists():
-            raise ValidationError('Product id is not correct')
-        return product_id
 
     def validate(self, attrs):
-        '''
-        this will check if the requested quantity for an item is avilable in inventory
-
-        '''
         product_id = attrs['product_id']
+        '''
+        this part ensures that product_id is related to an object of product table in DB
+        '''
+        if not Product.objects.filter(pk=product_id).exists():
+            raise ValidationError({'product_id': 'Product ID is not correct'})
+
         product = Product.objects.prefetch_related('cartitem_set__cart').get(id=product_id)
         cart_id = self.context['cart_id']
+
+        '''
+        this part will check if cart exists
+        '''
+        cart_bool = Cart.objects.filter(id = cart_id).exists()
+        if not cart_bool:
+            raise ValidationError({'cart_id': 'This CART is not valid... create a cart and try adding data to the new existing cart'})
+
+
+        '''
+        this will check if the requested quantity for an item is avilable in inventory
+        '''
         try:
             cartitem = product.cartitem_set.get(cart_id=cart_id)
             if cartitem.quantity + attrs['quantity'] > product.inventory:
-                raise ValidationError({'quantity': 'quantity is more than available'})
+                raise ValidationError({'quantity': 'quantity is getting more than available'})
+
         except CartItem.DoesNotExist:
             if attrs['quantity'] > product.inventory:
                 raise ValidationError({'quantity': 'quantity is more than available'})
             else:
                 pass
+
         return attrs
 
 
@@ -174,17 +186,17 @@ class CartSerializer(serializers.ModelSerializer):
 
 class OrderItemSerailizer(serializers.ModelSerializer):
     order_id = serializers.IntegerField()
-    product_id = serializers.IntegerField()
+    product = ProductSerializer()
 
     class Meta:
         model = OrderItem
-        fields = ['id', 'order_id', 'product_id', 'quantity', 'unit_price']
+        fields = ['id', 'order_id', 'product', 'quantity', 'unit_price']
 
-class OrderSerailizer(WritableNestedModelSerializer):
+class OrderSerailizer(serializers.ModelSerializer):
     placed_at = serializers.DateTimeField(read_only=True)
-    payment_status = serializers.CharField(read_only=True)
+    payment_status = serializers.CharField()
     items = OrderItemSerailizer(many=True)
-    user_id = serializers.IntegerField()
+    user_id = serializers.IntegerField(read_only=True)
     class Meta:
         model = Order
         fields = ['id', 'items', 'placed_at', 'payment_status', 'user_id']

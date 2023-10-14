@@ -167,6 +167,8 @@ class OrderViewSet(ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        if user.is_staff:
+            return Order.objects.select_related('user').prefetch_related('items').all()
         return Order.objects.select_related('user').prefetch_related('items').filter(user=user)
 
     def create(self, request, *args, **kwargs):
@@ -179,7 +181,8 @@ class OrderViewSet(ModelViewSet):
     def get_serializer_class(self):
         if self.request.method == 'POST':
             return CreateOrderSerializer
-
+        elif self.request.method == 'PATCH':
+            return UpdateOrderSerializer
         return OrderSerailizer
 
     def get_serializer_context(self):
