@@ -30,15 +30,18 @@ class TestPostCartItem:
     def test_post_returns_201(self, api_client):
         cart = baker.make(Cart)
         product = baker.make(Product)
+
         response = api_client.post(f'/carts/{cart.id}/items/', {'product_id': product.id, 'quantity': 1})
 
         assert response.status_code == status.HTTP_201_CREATED
 
     def test_creating_a_existing_cartitem_only_increases_the_quantity_of_existing_one(self, api_client):
-        cart_item = baker.make(CartItem)
+        product = baker.make(Product, inventory=10000)
+        cart_item = baker.make(CartItem, product=product, quantity=1)
         existing_quantity = cart_item.quantity
         quantity = 1
-        response = api_client.post(f'/carts/{cart_item.cart.id}/items/', {'product_id': cart_item.product.id, 'quantity': 1})
+
+        response = api_client.post(f'/carts/{cart_item.cart.id}/items/', {'product_id': cart_item.product.id, 'quantity': quantity})
 
         assert response.data['quantity'] == quantity + existing_quantity
 

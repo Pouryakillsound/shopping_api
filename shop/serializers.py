@@ -122,7 +122,8 @@ class CreateCartItemSerializer(serializers.ModelSerializer):
         cart_bool = Cart.objects.filter(id = cart_id).exists()
         if not cart_bool:
             raise ValidationError({'cart_id': 'This CART is not valid... create a cart and try adding data to the new existing cart'})
-
+        else:
+            pass
 
         '''
         this will check if the requested quantity for an item is avilable in inventory
