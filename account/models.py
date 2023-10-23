@@ -2,8 +2,6 @@ from typing import Any
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator
-from location_field.models.spatial import LocationField
-from django.contrib.gis.geos import Point
 
 
 class User(AbstractUser):
@@ -12,8 +10,8 @@ class User(AbstractUser):
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    age = models.PositiveSmallIntegerField(validators=[MinValueValidator(18)])
-    national_code = models.PositiveBigIntegerField()
+    age = models.PositiveSmallIntegerField(null=True, validators=[MinValueValidator(18)])
+    national_code = models.PositiveBigIntegerField(null=True)
 
     def __str__(self) -> str:
         return f'{self.user.username}'
@@ -25,7 +23,7 @@ class Address(models.Model):
     zipcode = models.CharField(max_length=20)
     unit = models.CharField(max_length=20)
     customer = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='addresses')
-    location = LocationField(based_fields=['city'], zoom=7, default=Point(1.0, 1.0))
+
 
 
     def __str__(self):

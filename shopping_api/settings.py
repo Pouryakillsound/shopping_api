@@ -48,7 +48,6 @@ INSTALLED_APPS = [
     'django_filters',
     'djoser',
     'rest_framework_simplejwt',
-    'location_field.apps.DefaultConfig',
     'shop',
     'account',
     'playground',
@@ -93,7 +92,7 @@ WSGI_APPLICATION = 'shopping_api.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'store',
         'HOST':'localhost',
         'USER':'postgres',

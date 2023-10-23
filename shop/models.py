@@ -27,6 +27,7 @@ class Product(models.Model):
     collection = models.ForeignKey(Collection, on_delete=models.PROTECT, related_name='products')
     promotion = models.ManyToManyField(Promotion, blank=True)
     seller = models.ForeignKey(User, on_delete=models.CASCADE)
+    sold_number = models.IntegerField(default=0)
 
     def __str__(self) -> str:
         return self.title
@@ -35,7 +36,7 @@ class Product(models.Model):
         return reverse.reverse('shop:products-detail-with-slug', args=[str(self.id), str(self.slug)])
 
     class Meta:
-        permissions = [('edit_product', 'can edit product')] #this permission allows users to edit or delete their own products checkout permissions.py
+        permissions = [('edit_product', 'can edit product')] #this permission allows sellers to edit or delete their own products, checkout permissions.py
 
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')

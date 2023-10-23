@@ -1,4 +1,3 @@
-import decimal
 from django.core.exceptions import ValidationError
 from django.utils.text import slugify
 from rest_framework import serializers
@@ -233,6 +232,7 @@ class CreateOrderSerializer(serializers.Serializer):
             for cart_item in cart.items.all():
                 product = cart_item.product
                 product.inventory = F('inventory') - cart_item.quantity
+                product.sold_number = F('sold_number') + cart_item.quantity
                 products.append(product)
             Product.objects.bulk_update(products, ['inventory'])
             

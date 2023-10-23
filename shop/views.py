@@ -27,21 +27,22 @@ from .serializers import (CartSerializer, CollectionSerializer,
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
-
+from .filters import ProductFilter
 
 
 class ProductViewSet(ModelViewSet):
     http_method_names = ['header', 'options', 'get', 'patch', 'post', 'delete']
     queryset = Product.objects.prefetch_related('images', 'promotion').select_related('collection', 'seller').all()
     lookup_fields = ('pk', 'slug')
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
     search_fields = ['title']
-    
+    filterset_class = ProductFilter
+
     def get_object(self):
         queryset = self.get_queryset()
         loopups = self.lookup_fields
         filters = {}
-        for filter in loopups:           
+        for filter in loopups:
             filters[filter] = self.kwargs.get(filter)
         obj = get_object_or_404(queryset, **filters)
         self.check_object_permissions(self.request, obj)
