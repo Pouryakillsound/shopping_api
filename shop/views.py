@@ -34,9 +34,10 @@ class ProductViewSet(ModelViewSet):
     http_method_names = ['header', 'options', 'get', 'patch', 'post', 'delete']
     queryset = Product.objects.prefetch_related('images', 'promotion').select_related('collection', 'seller').all()
     lookup_fields = ('pk', 'slug')
-    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title']
     filterset_class = ProductFilter
+    ordering_fields = ['unit_price']
 
     def get_object(self):
         queryset = self.get_queryset()
